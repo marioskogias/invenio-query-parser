@@ -48,3 +48,8 @@ class ASTtoDSLConverter(object):
     @visitor(ast.DoubleQuotedValue)
     def visit(self, node):
         return lambda x : {"match": { str(x): str(node.value)}}
+
+    @visitor(ast.RangeOp)
+    def visit(self, node, left, right):
+        return lambda x : {"range": { str(x): {"gte": node.left.value, "lte": node.right.value}}}
+
