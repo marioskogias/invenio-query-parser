@@ -7,10 +7,19 @@ from ..visitor import make_visitor
 class ASTtoDSLConverter(object):
     visitor = make_visitor()
 
-    # not analyzed fields should be used as filters
-    #NOT_ANALYZED_FIELDS = set(["baz","boo"])
+    def __init__(self, conf_dict):
+        """Provide a dictinary mapping invenio keywords
+           to elasticsearch fields as a list
+           eg. {"author": ["author.last_name, author.first_name"]}
+        """
+        self.keyword_dict = conf_dict
 
     def map_keyword_to_fields(self, keyword):
+        if conf_dict:
+            try:
+                return self.conf_dict.get(keyword)
+            except AttributeError, KeyeError:
+                pass
         return [str(keyword)]
 
     @visitor(ast.KeywordOp)
@@ -36,7 +45,7 @@ class ASTtoDSLConverter(object):
 
     @visitor(ast.ValueQuery)
     def visit(self, node, child):
-        return child("_all")
+        return child(["_all"])
 
     @visitor(ast.Keyword)
     def visit(self, node):
