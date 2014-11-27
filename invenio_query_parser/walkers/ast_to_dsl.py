@@ -7,7 +7,7 @@ from ..visitor import make_visitor
 class ASTtoDSLConverter(object):
     visitor = make_visitor()
 
-    def __init__(self, conf_dict):
+    def __init__(self, conf_dict=None):
         """Provide a dictinary mapping invenio keywords
            to elasticsearch fields as a list
            eg. {"author": ["author.last_name, author.first_name"]}
@@ -15,9 +15,9 @@ class ASTtoDSLConverter(object):
         self.keyword_dict = conf_dict
 
     def map_keyword_to_fields(self, keyword):
-        if conf_dict:
+        if self.keyword_dict:
             try:
-                return self.conf_dict.get(keyword)
+                return self.keyword_dict.get(keyword)
             except AttributeError, KeyeError:
                 pass
         return [str(keyword)]
