@@ -28,7 +28,6 @@ class ASTtoDSLConverter(object):
            For now on it returns only queries
         """
         l = self.map_keyword_to_fields(keyword.value)
-        print l
         return value(l)
 
     @visitor(ast.AndOp)
@@ -77,9 +76,24 @@ class ASTtoDSLConverter(object):
                 "should": [{"term": {str(k): str(node.value)}}
                            for k in x]
                 }
+            } if x[0] != "_all" else {
+            "bool": {
+                "should": [{"term": {str(k): str(node.value)}}
+                           for k in self.map_keyword_to_fields("raw_fields")]
+                }
             }
+
 
     @visitor(ast.RangeOp)
     def visit(self, node, left, right):
         return lambda x: {"range": {str(x): {"gte": node.left.value,
                                              "lte": node.right.value}}}
+
+    @visitor(ast.RegexValue)
+    def visit(self, node):
+        return lambda x: {
+            "bool": {
+                "should": [{"regexp": {str(k): str(node.value)}}
+                           for k in x]
+                }
+            }
