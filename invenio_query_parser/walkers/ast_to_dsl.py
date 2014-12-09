@@ -7,7 +7,7 @@ from ..visitor import make_visitor
 class ASTtoDSLConverter(object):
     visitor = make_visitor()
 
-    def __init__(self, conf_dict=None):
+    def __init__(self, conf_dict):
         """Provide a dictinary mapping invenio keywords
            to elasticsearch fields as a list
            eg. {"author": ["author.last_name, author.first_name"]}
@@ -16,10 +16,8 @@ class ASTtoDSLConverter(object):
 
     def map_keyword_to_fields(self, keyword):
         if self.keyword_dict:
-            try:
-                return self.keyword_dict.get(keyword)
-            except AttributeError, KeyeError:
-                pass
+            res = self.keyword_dict.get(keyword)
+            return res if res else [str(keyword)]
         return [str(keyword)]
 
     @visitor(ast.KeywordOp)
@@ -28,6 +26,14 @@ class ASTtoDSLConverter(object):
            For now on it returns only queries
         """
         l = self.map_keyword_to_fields(keyword.value)
+        if keyword.value == "fulltext":
+            child_dict = {
+                "has_child": {
+                    "type": "documents",
+                    "query": value(l)
+                    }
+                }
+            return child_dict
         return value(l)
 
     @visitor(ast.AndOp)
@@ -82,7 +88,6 @@ class ASTtoDSLConverter(object):
                            for k in self.map_keyword_to_fields("raw_fields")]
                 }
             }
-
 
     @visitor(ast.RangeOp)
     def visit(self, node, left, right):
